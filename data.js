@@ -3,14 +3,74 @@
 // columns[].currentHeader: 현재 버전 이름 합성에 쓰이는 열 이름(실측 오기재 재현용)
 // checkboxHeader: 현재 버전 체크박스 이름 합성에 들어가는 열 이름 슬롯(실측: 화면마다 다름)
 
+const APPROVER_NAMES = [
+  '김민준',
+  '이서연',
+  '박도윤',
+  '최지우',
+  '정예준',
+  '강하은',
+  '조시우',
+  '윤서아',
+  '장하준',
+  '임지민',
+  '한지호',
+  '오수아',
+  '서은우',
+  '신다은',
+  '권유준',
+  '황채원',
+  '안현우',
+  '송지아',
+  '류건우',
+  '전서윤',
+  '홍시온',
+  '고예린',
+  '문준서',
+  '양하린',
+  '손민재',
+  '배소율',
+  '백지훈',
+  '허유나',
+  '유태양',
+  '남가은',
+  '심승우',
+  '노지원',
+  '곽연우',
+  '성서현',
+  '차은호',
+  '주아린',
+  '우재원',
+  '구나연',
+  '민준혁',
+  '라하율',
+  '진시현',
+  '엄지유',
+  '원도현',
+  '방수빈',
+  '공하람',
+  '석윤아',
+  '탁지환',
+  '변예나',
+  '길준우',
+  '반서준',
+];
+
 function approverRows() {
   const rows = [];
-  rows.push({ no: '1', id: 'user001', name: 'user001', pos: '장학사', org: '테스트교육청', note: '퇴직' });
-  for (let i = 2; i <= 49; i += 1) {
+  for (let i = 1; i <= 50; i += 1) {
     const n = String(i).padStart(3, '0');
-    rows.push({ no: String(i), id: `user${n}`, name: `사용자${n}`, pos: '교사', org: '테스트교육청', note: '' });
+    const first = i === 1;
+    const last = i === 50;
+    rows.push({
+      no: String(i),
+      id: `user${n}`,
+      name: APPROVER_NAMES[i - 1],
+      pos: first ? '장학사' : (last ? '' : '교사'),
+      org: '테스트교육청',
+      note: first ? '퇴직' : '',
+    });
   }
-  rows.push({ no: '50', id: 'user050', name: '강원0309', pos: '', org: '테스트교육청', note: '' });
   return rows;
 }
 
@@ -19,7 +79,7 @@ export const screens = [
     id: 'approver',
     title: '결재자지정 사용자 목록',
     menu: '복무, 개인근무상황관리, 승인요청, 결재자지정',
-    note: '1행과 50행은 2026년 9월 11일 실측 원문이고, 2행부터 49행까지는 같은 규칙으로 채운 자리표시 데이터입니다.',
+    note: '이름 문자열의 규칙과 1행·50행의 직위·비고는 2026년 9월 11일 실측 원문이고, 성명은 가명, 2행부터 49행까지는 같은 규칙으로 채운 자리표시 데이터입니다.',
     gridName: { current: '사용자', improved: '사용자' },
     checkboxHeader: '',
     columns: [
