@@ -1,4 +1,5 @@
-// 화면 데이터. 값은 교육용 서버(edu.neis.go.kr)의 테스트 데이터이며 사용자ID는 가린 값이다.
+// 화면 데이터. 값은 교육용 서버(edu.neis.go.kr)의 테스트 데이터이며 사용자ID와 성명은 가린 값이다.
+// gridName.current는 실측 aria-label(이름에 「그리드」가 들어 있음), improved는 role이 역할을 알리므로 그 말을 뺀 이름.
 // columns[].type: 'checkbox' | 'text' | 'link' | 'edit'
 // columns[].currentHeader: 현재 버전 이름 합성에 쓰이는 열 이름(실측 오기재 재현용)
 // checkboxHeader: 현재 버전 체크박스 이름 합성에 들어가는 열 이름 슬롯(실측: 화면마다 다름)
@@ -80,7 +81,7 @@ export const screens = [
     title: '결재자지정 사용자 목록',
     menu: '복무, 개인근무상황관리, 승인요청, 결재자지정',
     note: '이름 문자열의 규칙과 1행·50행의 직위·비고는 2026년 9월 11일 실측 원문이고, 성명은 가명, 2행부터 49행까지는 같은 규칙으로 채운 자리표시 데이터입니다.',
-    gridName: { current: '사용자', improved: '사용자' },
+    gridName: { current: '사용자 그리드', improved: '사용자' },
     checkboxHeader: '',
     columns: [
       { key: 'sel', header: '선택', type: 'checkbox' },
@@ -98,7 +99,7 @@ export const screens = [
     title: '유연근무 목록',
     menu: '복무, 개인유연근무관리',
     note: '두 행 22칸 전부 2026년 9월 11일 센스리더 낭독과 DOM 실측이 일치한 원문입니다. 신청기간 칸은 임시저장 행이라 이름 끝에 「link」가 붙습니다.',
-    gridName: { current: '유연근무목록', improved: '유연근무목록' },
+    gridName: { current: '유연근무 목록 그리드', improved: '유연근무 목록' },
     checkboxHeader: '선택',
     columns: [
       { key: 'sel', header: '선택', type: 'checkbox' },

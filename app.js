@@ -7,7 +7,8 @@ const VERSION_LABEL = { current: '현재 나이스', improved: '개선안' };
 const state = {
   screen: screens[0],
   version: 'current',
-  focus: null,          // { r, c } 데이터 행 1부터, 열 0부터
+  focus: null,          // { r, c } 데이터 행 1부터, 열 0부터. 마지막으로 다녀간 칸
+  at: null,             // 'grid' 컨테이너에 포커스 | 'cell' 칸에 포커스 | null 표 밖
   checked: new Set(),   // 선택된 데이터 행 번호
   suppressEntry: false, // 버전 전환 재포커스는 표 진입으로 치지 않는다
 };
@@ -55,7 +56,8 @@ function cellName(screen, version, r, c) {
 // 표에 들어갈 때 센스리더가 읽는 문구(2026.09.11 실측). 「false」의 출처는 확인되지 않았다.
 function entryPhrase(screen, version) {
   const name = screen.gridName[version];
-  return `${name ? `${name} ` : ''}그리드 false 시작 그리고 알트키 + 방향키로 이동이 가능합니다`;
+  const head = !name ? '그리드' : (name.endsWith('그리드') ? name : `${name} 그리드`);
+  return `${head} false 시작 그리고 알트키 + 방향키로 이동이 가능합니다`;
 }
 
 function entryLabel(screen, version) {
@@ -79,6 +81,8 @@ function render() {
   if (name) grid.setAttribute('aria-label', name);
   grid.style.minWidth = `${screen.columns.length * 7}em`;
   grid.dataset.version = version;
+  // 나이스와 같이 Tab은 표 컨테이너에 먼저 앉고, 방향키로 칸에 들어간다. 칸은 Tab 순서에 들지 않는다.
+  grid.tabIndex = 0;
 
   const head = document.createElement('div');
   head.setAttribute('role', 'row');
@@ -142,10 +146,10 @@ function render() {
 
   grid.addEventListener('keydown', onGridKeydown);
   grid.addEventListener('focusin', onGridFocusin);
+  grid.addEventListener('focusout', onGridFocusout);
   grid.addEventListener('click', onGridClick);
 
   el.host.replaceChildren(grid);
-  setRoving(state.focus ?? { r: 1, c: 0 });
 }
 
 function focusTarget(r, c) {
@@ -155,24 +159,29 @@ function focusTarget(r, c) {
   return cell.querySelector('[role="checkbox"]') ?? cell;
 }
 
-function setRoving({ r, c }) {
-  const grid = el.host.firstElementChild;
-  grid.querySelectorAll('[tabindex="0"]').forEach((n) => { n.tabIndex = -1; });
-  const t = focusTarget(r, c);
-  if (t) t.tabIndex = 0;
-}
-
 function moveFocus(r, c) {
   const { screen } = state;
   const rr = Math.min(Math.max(r, 1), screen.rows.length);
   const cc = Math.min(Math.max(c, 0), screen.columns.length - 1);
-  setRoving({ r: rr, c: cc });
   focusTarget(rr, cc)?.focus();
 }
 
 // 이벤트 ---------------------------------------------------------------------
 
 function onGridKeydown(e) {
+  if (e.target === e.currentTarget) {
+    // 표 컨테이너에서: 방향키로 마지막에 다녀간 칸(처음이면 첫 행 첫 칸)에 들어간다
+    if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+      const f = state.focus ?? { r: 1, c: 0 };
+      moveFocus(f.r, f.c);
+    } else if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault(); toggleVersion();
+    } else if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault(); speak();
+    }
+    return;
+  }
   const t = e.target.closest('[data-r]');
   if (!t) return;
   const r = Number(t.dataset.r);
@@ -211,14 +220,30 @@ function onGridClick(e) {
 }
 
 function onGridFocusin(e) {
-  const t = e.target.closest('[data-r]');
-  if (!t) return;
   const grid = e.currentTarget;
   const entering = !state.suppressEntry && !(e.relatedTarget && grid.contains(e.relatedTarget));
   state.suppressEntry = false;
+  if (e.target === grid) {
+    state.at = 'grid';
+    updatePanel();
+    if (el.autoSpeak.checked && entering) speak();
+    return;
+  }
+  const t = e.target.closest('[data-r]');
+  if (!t) return;
+  // 칸에 들어오면 컨테이너는 Tab 순서에서 빠져, 칸에서 Shift+Tab을 누르면 나이스처럼 표 밖 이전 컨트롤로 나간다
+  grid.tabIndex = -1;
+  state.at = 'cell';
   state.focus = { r: Number(t.dataset.r), c: Number(t.dataset.c) };
   updatePanel();
   if (el.autoSpeak.checked) speak(entering);
+}
+
+function onGridFocusout(e) {
+  const grid = e.currentTarget;
+  if (e.relatedTarget && grid.contains(e.relatedTarget)) return;
+  grid.tabIndex = 0;
+  state.at = null;
 }
 
 function toggleChecked(r) {
@@ -234,11 +259,15 @@ function toggleChecked(r) {
 
 function toggleVersion() {
   state.version = state.version === 'current' ? 'improved' : 'current';
+  const at = state.at;
   render();
   el.status.textContent = `${VERSION_LABEL[state.version]} 버전`;
-  if (state.focus) {
+  if (at === 'cell' && state.focus) {
     state.suppressEntry = true;
     focusTarget(state.focus.r, state.focus.c)?.focus();
+  } else if (at === 'grid') {
+    state.suppressEntry = true;
+    el.host.firstElementChild.focus();
   }
 }
 
@@ -269,6 +298,7 @@ function focusedInfo() {
 }
 
 function updatePanel() {
+  if (state.at === 'grid') { gridPanel(); return; }
   const info = focusedInfo();
   if (!info) { clearPanel(); return; }
   const { r, c, col, node, isCb, name, checked, version, screen } = info;
@@ -301,6 +331,18 @@ function markupOf(node) {
   return html.replace(/></g, '>\n  <').replace(/\n  <\/div>$/, '\n</div>');
 }
 
+function gridPanel() {
+  const { screen, version } = state;
+  const grid = el.host.firstElementChild;
+  const name = screen.gridName[version];
+  el.pName.textContent = `이름: ${name || '(표 이름 없음)'}`;
+  el.pRole.textContent = '역할: 표 (grid). Tab으로 들어와 컨테이너에 포커스가 있는 상태';
+  el.pPos.textContent = `표준 속성: aria-rowcount ${screen.rows.length + 1}, aria-colcount ${screen.columns.length}`;
+  el.pEntry.textContent = entryLabel(screen, version);
+  el.pMarkup.textContent = grid.outerHTML.slice(0, grid.outerHTML.indexOf('>') + 1).replace(/ style="[^"]*"/, '').replace(/ data-version="[^"]*"/, '');
+  el.pRow.replaceChildren();
+}
+
 function clearPanel() {
   el.pName.textContent = '이름: 표 안의 칸으로 이동하면 표시됩니다.';
   el.pRole.textContent = '';
@@ -311,6 +353,7 @@ function clearPanel() {
 }
 
 function speechText() {
+  if (state.at === 'grid') return entryPhrase(state.screen, state.version);
   const info = focusedInfo();
   if (!info) return '';
   if (info.isCb) return `${info.checked ? '선택' : '해제'} ${info.name} 체크상자`;
