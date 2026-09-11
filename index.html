@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>나이스 그리드 낭독 비교</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h1>나이스 그리드 낭독 비교</h1>
+  <p>4세대 나이스의 표(그리드)는 칸마다 「1행 마지막 행 순번 1」처럼 행 번호와 경계, 열 이름을 칸 이름(aria-label)에 문자열로 넣어 두고 있습니다. 그래서 스크린리더가 칸을 옮길 때마다 같은 말을 반복해 읽습니다. 이 페이지는 교육용 서버에서 실측한 표를 그대로 재현한 「현재 나이스」와, 그 문자열만 지우고 표준 속성을 남긴 「개선안」을 같은 자리에서 번갈아 볼 수 있게 만든 것입니다.</p>
+  <ul>
+    <li>표 안에서 방향키로 칸을 옮깁니다. 첫 열의 체크박스는 스페이스로 선택하고 해제합니다.</li>
+    <li>「개선안으로 전환」 버튼을 누르거나 표 안에서 V 키를 누르면 보던 칸 그대로 버전이 바뀝니다.</li>
+    <li>스크린리더가 없으면 낭독 패널에서 칸 이름을 읽고, 「읽기」 버튼으로 브라우저 음성을 들을 수 있습니다.</li>
+  </ul>
+
+  <div class="controls">
+    <label>화면
+      <select id="screen"></select>
+    </label>
+    <button type="button" id="toggle">개선안으로 전환</button>
+    <p id="status" class="status" aria-live="polite"></p>
+  </div>
+
+  <h2 id="grid-heading"></h2>
+  <p id="screen-note"></p>
+
+  <div class="layout">
+    <div class="grid-wrap" id="grid-host"></div>
+
+    <div class="panel">
+      <h2>낭독 패널</h2>
+      <p id="p-name"></p>
+      <p id="p-role"></p>
+      <p id="p-pos"></p>
+      <p>
+        <button type="button" id="speak">읽기</button>
+        <label><input type="checkbox" id="auto-speak"> 칸을 옮길 때 자동으로 읽기</label>
+      </p>
+      <h3>이 행을 왼쪽부터 훑을 때 들리는 이름</h3>
+      <ol id="p-row"></ol>
+      <h3>이 칸의 마크업</h3>
+      <pre id="p-markup"></pre>
+    </div>
+  </div>
+
+  <h2>무엇이 다른가</h2>
+  <table class="diff">
+    <thead>
+      <tr><th>정보</th><th>현재 나이스</th><th>개선안</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>행 번호</td><td>칸 이름에 「N행」 문자열, 그리고 행의 aria-rowindex</td><td>행의 aria-rowindex만</td></tr>
+      <tr><td>마지막 행, 마지막 열</td><td>칸 이름에 「마지막 행」「마지막 열」 문자열</td><td>aria-rowcount와 aria-colcount로 스크린리더가 판단</td></tr>
+      <tr><td>열 이름</td><td>칸 이름에 열 이름을 복제</td><td>columnheader 연결</td></tr>
+      <tr><td>위젯 종류</td><td>칸 이름에 「편집창」「체크박스」 문자열, 그리고 role</td><td>role만</td></tr>
+      <tr><td>칸 값</td><td>이름 문자열의 끝에</td><td>칸 내용 그대로가 이름</td></tr>
+      <tr><td>열 위치</td><td>칸의 aria-colindex 없음</td><td>칸마다 aria-colindex</td></tr>
+    </tbody>
+  </table>
+  <p>개선안은 새 정보를 더하지 않습니다. 표준 좌표 속성은 현재 나이스에도 이미 있으므로, 칸 이름의 문자열을 지워도 행렬 정보는 표준 경로로 그대로 전달됩니다. 사라지는 것은 칸마다 반복되는 낭독뿐입니다.</p>
+
+  <footer>
+    <p>근거: 2026년 7월 14일과 9월 11일 나이스 교육용 서버(edu.neis.go.kr) 실측. 값은 교육용 서버의 테스트 데이터이며 계정 ID는 가린 값입니다. 함께하는장애인교원노동조합, 나이스 웹 접근성 자문단.</p>
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
