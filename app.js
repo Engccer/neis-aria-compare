@@ -9,6 +9,7 @@ const state = {
   version: 'current',
   focus: null,          // { r, c } 데이터 행 1부터, 열 0부터
   checked: new Set(),   // 선택된 데이터 행 번호
+  suppressEntry: false, // 버전 전환 재포커스는 표 진입으로 치지 않는다
 };
 
 const el = {
@@ -21,6 +22,7 @@ const el = {
   pName: document.getElementById('p-name'),
   pRole: document.getElementById('p-role'),
   pPos: document.getElementById('p-pos'),
+  pEntry: document.getElementById('p-entry'),
   pMarkup: document.getElementById('p-markup'),
   pRow: document.getElementById('p-row'),
   speak: document.getElementById('speak'),
@@ -48,6 +50,17 @@ function cellName(screen, version, r, c) {
   }
   if (col.type === 'checkbox') return improvedCheckboxName();
   return improvedCellName({ value });
+}
+
+// 표에 들어갈 때 센스리더가 읽는 문구(2026.09.11 실측). 「false」의 출처는 확인되지 않았다.
+function entryPhrase(screen, version) {
+  const name = screen.gridName[version];
+  return `${name ? `${name} ` : ''}그리드 false 시작 그리고 알트키 + 방향키로 이동이 가능합니다`;
+}
+
+function entryLabel(screen, version) {
+  const basis = version === 'current' ? '센스리더 실측' : '예상, false의 출처는 미확인';
+  return `표에 들어갈 때 (${basis}): 「${entryPhrase(screen, version)}」`;
 }
 
 // 렌더 -----------------------------------------------------------------------
@@ -180,6 +193,10 @@ function onGridKeydown(e) {
     case 'V':
       if (!e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); toggleVersion(); }
       break;
+    case 'r':
+    case 'R':
+      if (!e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); speak(); }
+      break;
     default:
   }
 }
@@ -196,9 +213,12 @@ function onGridClick(e) {
 function onGridFocusin(e) {
   const t = e.target.closest('[data-r]');
   if (!t) return;
+  const grid = e.currentTarget;
+  const entering = !state.suppressEntry && !(e.relatedTarget && grid.contains(e.relatedTarget));
+  state.suppressEntry = false;
   state.focus = { r: Number(t.dataset.r), c: Number(t.dataset.c) };
   updatePanel();
-  if (el.autoSpeak.checked) speak();
+  if (el.autoSpeak.checked) speak(entering);
 }
 
 function toggleChecked(r) {
@@ -216,7 +236,10 @@ function toggleVersion() {
   state.version = state.version === 'current' ? 'improved' : 'current';
   render();
   el.status.textContent = `${VERSION_LABEL[state.version]} 버전`;
-  if (state.focus) focusTarget(state.focus.r, state.focus.c)?.focus();
+  if (state.focus) {
+    state.suppressEntry = true;
+    focusTarget(state.focus.r, state.focus.c)?.focus();
+  }
 }
 
 el.toggle.addEventListener('click', toggleVersion);
@@ -256,6 +279,7 @@ function updatePanel() {
   const colindex = version === 'improved' ? `aria-colindex ${c + 1}` : 'aria-colindex 없음';
   const gridName = screen.gridName[version] ? `표 이름 「${screen.gridName[version]}」` : '표 이름 없음';
   el.pPos.textContent = `표준 속성: aria-rowindex ${r + 1} (전체 ${screen.rows.length + 1}행), ${colindex} (전체 ${screen.columns.length}열), 열 머리글 「${col.header}」, ${gridName}`;
+  el.pEntry.textContent = entryLabel(screen, version);
   el.pMarkup.textContent = markupOf(node);
   const items = screen.columns.map((_, cc) => {
     const li = document.createElement('li');
@@ -281,6 +305,7 @@ function clearPanel() {
   el.pName.textContent = '이름: 표 안의 칸으로 이동하면 표시됩니다.';
   el.pRole.textContent = '';
   el.pPos.textContent = '';
+  el.pEntry.textContent = entryLabel(state.screen, state.version);
   el.pMarkup.textContent = '';
   el.pRow.replaceChildren();
 }
@@ -292,19 +317,22 @@ function speechText() {
   return info.name === '' ? '빈 칸' : info.name;
 }
 
-function speak() {
+function speak(withEntry = false) {
   if (!('speechSynthesis' in window)) { el.status.textContent = '이 브라우저는 음성 합성을 지원하지 않습니다.'; return; }
   const text = speechText();
   if (!text) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ko-KR';
   const voice = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith('ko'));
-  if (voice) u.voice = voice;
-  window.speechSynthesis.speak(u);
+  const parts = withEntry ? [entryPhrase(state.screen, state.version), text] : [text];
+  parts.forEach((p) => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = 'ko-KR';
+    if (voice) u.voice = voice;
+    window.speechSynthesis.speak(u);
+  });
 }
 
-el.speak.addEventListener('click', speak);
+el.speak.addEventListener('click', () => speak(false));
 
 // 시작 -----------------------------------------------------------------------
 
