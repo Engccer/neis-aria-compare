@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>나이스 그리드 낭독 비교</title>
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <main>
@@ -59,6 +59,7 @@
       <tr><td>위젯 종류</td><td>칸 이름에 「편집창」「체크박스」 문자열, 그리고 role</td><td>role만</td></tr>
       <tr><td>칸 값</td><td>이름 문자열의 끝에</td><td>칸 내용 그대로가 이름</td></tr>
       <tr><td>열 위치</td><td>칸의 aria-colindex 없음</td><td>칸마다 aria-colindex</td></tr>
+      <tr><td>행 소유 관계</td><td>표와 행 사이에 역할 없는 컨테이너가 끼어 행이 표에 속하지 않음. 스크린리더가 표 크기를 세지 못함</td><td>표 안에 rowgroup이 행을 거느림. 표에 들어갈 때 행과 열 수를 안내</td></tr>
     </tbody>
   </table>
   <p>개선안은 새 정보를 더하지 않습니다. 표준 좌표 속성은 현재 나이스에도 이미 있으므로, 칸 이름의 문자열을 지워도 행렬 정보는 표준 경로로 그대로 전달됩니다. 사라지는 것은 칸마다 반복되는 낭독뿐입니다.</p>
@@ -67,6 +68,6 @@
     <p>근거: 2026년 7월 14일과 9월 11일 나이스 교육용 서버(edu.neis.go.kr) 실측. 값은 교육용 서버의 테스트 데이터이며 계정 ID는 가린 값입니다. 함께하는장애인교원노동조합, 나이스 웹 접근성 자문단.</p>
   </footer>
 </main>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>

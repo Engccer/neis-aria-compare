@@ -53,16 +53,27 @@ function cellName(screen, version, r, c) {
   return improvedCellName({ value });
 }
 
-// 표에 들어갈 때 센스리더가 읽는 문구(2026.09.11 실측). 「false」의 출처는 확인되지 않았다.
+// 표에 들어갈 때 센스리더가 읽는 문구.
+// 현재 나이스: 2026년 9월 11일 교육용 서버 실측. 행 소유 관계가 끊어져 있어 표 크기를 세지 못한다.
+// 개선안: 표 구조가 온전할 때 센스리더가 크기를 세어 읽는 형태.
 function entryPhrase(screen, version) {
   const name = screen.gridName[version];
-  const head = !name ? '그리드' : (name.endsWith('그리드') ? name : `${name} 그리드`);
-  return `${head} false 시작 그리고 알트키 + 방향키로 이동이 가능합니다`;
+  if (version === 'current') {
+    const head = !name ? '그리드' : (name.endsWith('그리드') ? name : `${name} 그리드`);
+    return `${head} false 시작 그리고 알트키 + 방향키로 이동이 가능합니다`;
+  }
+  return `${name ? `${name} ` : ''}테이블시작 (${screen.rows.length + 1}행 ${screen.columns.length}열)`;
 }
 
 function entryLabel(screen, version) {
-  const basis = version === 'current' ? '센스리더 실측' : '예상, false의 출처는 미확인';
+  const basis = version === 'current' ? '나이스 실측' : '표 구조가 온전할 때';
   return `표에 들어갈 때 (${basis}): 「${entryPhrase(screen, version)}」`;
+}
+
+function rowStructure(version) {
+  return version === 'current'
+    ? '행 구조: 표 안에 역할 없는 컨테이너가 끼어 있어 행이 표에 속하지 않음'
+    : '행 구조: 표 > rowgroup > 행';
 }
 
 // 렌더 -----------------------------------------------------------------------
@@ -84,6 +95,26 @@ function render() {
   // 나이스와 같이 Tab은 표 컨테이너에 먼저 앉고, 방향키로 칸에 들어간다. 칸은 Tab 순서에 들지 않는다.
   grid.tabIndex = 0;
 
+  // 행을 담는 자리. 현재 나이스는 행이 그리드의 자식이 아니라 역할 없는 컨테이너 안에 들어 있어
+  // 표 구조가 끊어진다(2026.09.15 실측: 행 하나하나가 그리드 8단계 아래, 중간에 role=group 하나).
+  // 개선안은 표준대로 rowgroup이 행을 거느린다.
+  let headHost;
+  let bodyHost;
+  if (version === 'current') {
+    const group = document.createElement('div');
+    group.setAttribute('role', 'group');
+    headHost = document.createElement('div');
+    bodyHost = document.createElement('div');
+    group.append(headHost, bodyHost);
+    grid.appendChild(group);
+  } else {
+    headHost = document.createElement('div');
+    headHost.setAttribute('role', 'rowgroup');
+    bodyHost = document.createElement('div');
+    bodyHost.setAttribute('role', 'rowgroup');
+    grid.append(headHost, bodyHost);
+  }
+
   const head = document.createElement('div');
   head.setAttribute('role', 'row');
   head.setAttribute('aria-rowindex', '1');
@@ -96,7 +127,7 @@ function render() {
     if (col.type === 'checkbox') h.classList.add('col-checkbox');
     head.appendChild(h);
   });
-  grid.appendChild(head);
+  headHost.appendChild(head);
 
   screen.rows.forEach((row, i) => {
     const r = i + 1;
@@ -141,7 +172,7 @@ function render() {
       }
       tr.appendChild(td);
     });
-    grid.appendChild(tr);
+    bodyHost.appendChild(tr);
   });
 
   grid.addEventListener('keydown', onGridKeydown);
@@ -337,7 +368,7 @@ function gridPanel() {
   const name = screen.gridName[version];
   el.pName.textContent = `이름: ${name || '(표 이름 없음)'}`;
   el.pRole.textContent = '역할: 표 (grid). Tab으로 들어와 컨테이너에 포커스가 있는 상태';
-  el.pPos.textContent = `표준 속성: aria-rowcount ${screen.rows.length + 1}, aria-colcount ${screen.columns.length}`;
+  el.pPos.textContent = `표준 속성: aria-rowcount ${screen.rows.length + 1}, aria-colcount ${screen.columns.length}. ${rowStructure(version)}`;
   el.pEntry.textContent = entryLabel(screen, version);
   el.pMarkup.textContent = grid.outerHTML.slice(0, grid.outerHTML.indexOf('>') + 1).replace(/ style="[^"]*"/, '').replace(/ data-version="[^"]*"/, '');
   el.pRow.replaceChildren();
