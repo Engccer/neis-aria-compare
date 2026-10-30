@@ -25,7 +25,6 @@ const el = {
   pEntry: document.getElementById('p-entry'),
   pMarkup: document.getElementById('p-markup'),
   pRow: document.getElementById('p-row'),
-  speak: document.getElementById('speak'),
   autoSpeak: document.getElementById('auto-speak'),
 };
 
@@ -206,8 +205,6 @@ function onGridKeydown(e) {
       moveFocus(f.r, f.c);
     } else if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault(); toggleVersion();
-    } else if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault(); speak();
     }
     return;
   }
@@ -230,10 +227,6 @@ function onGridKeydown(e) {
     case 'v':
     case 'V':
       if (!e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); toggleVersion(); }
-      break;
-    case 'r':
-    case 'R':
-      if (!e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); speak(); }
       break;
     default:
   }
@@ -404,7 +397,6 @@ function speak(withEntry = false) {
   });
 }
 
-el.speak.addEventListener('click', () => speak(false));
 
 // 시작 -----------------------------------------------------------------------
 
