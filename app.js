@@ -25,7 +25,6 @@ const el = {
   pEntry: document.getElementById('p-entry'),
   pMarkup: document.getElementById('p-markup'),
   pRow: document.getElementById('p-row'),
-  autoSpeak: document.getElementById('auto-speak'),
 };
 
 // 이름 계산 -----------------------------------------------------------------
@@ -248,7 +247,7 @@ function onGridFocusin(e) {
   if (e.target === grid) {
     state.at = 'grid';
     updatePanel();
-    if (el.autoSpeak.checked && entering) speak();
+    if (entering) speak();
     return;
   }
   const t = e.target.closest('[data-r]');
@@ -258,7 +257,7 @@ function onGridFocusin(e) {
   state.at = 'cell';
   state.focus = { r: Number(t.dataset.r), c: Number(t.dataset.c) };
   updatePanel();
-  if (el.autoSpeak.checked) speak(entering);
+  speak(entering);
 }
 
 function onGridFocusout(e) {
