@@ -77,7 +77,3 @@ button { cursor: pointer; }
 .panel li[aria-current="true"] { font-weight: 700; }
 pre { background: var(--code-bg); padding: 8px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .status { min-height: 1.6em; color: var(--muted); margin: 0; }
-table.diff { border-collapse: collapse; margin: 8px 0 16px; }
-table.diff th, table.diff td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
-table.diff th { background: var(--head); }
-footer { margin-top: 32px; color: var(--muted); font-size: 0.9rem; }

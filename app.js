@@ -18,7 +18,6 @@ const el = {
   toggle: document.getElementById('toggle'),
   status: document.getElementById('status'),
   heading: document.getElementById('grid-heading'),
-  note: document.getElementById('screen-note'),
   host: document.getElementById('grid-host'),
   pName: document.getElementById('p-name'),
   pRole: document.getElementById('p-role'),
@@ -81,7 +80,6 @@ function rowStructure(version) {
 function render() {
   const { screen, version } = state;
   el.heading.textContent = `${screen.title}, ${VERSION_LABEL[version]}`;
-  el.note.textContent = `${screen.menu}. ${screen.note}`;
   el.toggle.textContent = version === 'current' ? '개선안으로 전환' : '현재 나이스로 전환';
 
   const grid = document.createElement('div');
